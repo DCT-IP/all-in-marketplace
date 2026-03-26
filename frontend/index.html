@@ -1,32 +1,89 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Marketplace</title>
+    <title>eMarket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script defer src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
 
-<h1>Marketplace</h1>
+<nav class="navbar">
+    <div class="logo">eMarket</div>
 
-<!-- NAVIGATION -->
-<button type="button" onclick="goToCart()">Go to Cart</button>
-<button type="button" onclick="goToDashboard()">Dashboard</button>
+    <input type="text" id="searchBar" placeholder="Search products...">
 
-<h2>Products</h2>
-<div id="products" class="products-grid"></div>
-
-<h2>Add User</h2>
-<form method="POST" action="/add_user">
-    <input type="text" name="username" placeholder="Enter username" required>
-
-    <select name="role">
-        <option value="buyer">Buyer</option>
-        <option value="seller">Seller</option>
+    <select id="sortSelect">
+        <option value="">Sort</option>
+        <option value="price_low">Price ↑</option>
+        <option value="price_high">Price ↓</option>
+        <option value="rating">Rating</option>
     </select>
 
-    <button type="submit">Add</button>
-</form>
+    <div class="nav-actions">
+        <button onclick="goToCart()">Cart</button>
+
+        <!-- Seller only -->
+        <button id="dashboardBtn" style="display:none;">Dashboard</button>
+
+        <!-- Auth -->
+        <div id="authArea"></div>
+
+        <!-- Theme -->
+        <button onclick="toggleTheme()">🌙</button>
+    </div>
+</nav>
+
+<header class="hero">
+    <h1>Welcome to eMarket</h1>
+</header>
+
+<section class="filters">
+    <button class="filter-btn" data-category="all">All</button>
+    <button class="filter-btn" data-category="Mobiles">Mobiles</button>
+    <button class="filter-btn" data-category="Laptops">Laptops</button>
+    <button class="filter-btn" data-category="Accessories">Accessories</button>
+</section>
+
+<section>
+    <div id="products" class="products-grid">
+        {% for product in products %}
+        <div class="product-card"
+             data-name="{{ (product.name or product.product_name) | lower }}"
+             data-price="{{ product.price }}"
+             data-rating="{{ product.rating or 4 }}"
+             data-category="{{ product.category or 'Misc' }}"
+             data-final-price="{{ (product.price * (1 - product.discount_percent/100)) if product.discount_percent else product.price }}">
+
+            {% if product.discount_percent %}
+            <span class="badge">-{{ product.discount_percent }}%</span>
+            {% endif %}
+
+            <img src="{{ product.image_url or 'https://via.placeholder.com/200x150' }}">
+
+            <h3>{{ product.name or product.product_name }}</h3>
+
+            <div class="rating">
+                ⭐ {{ product.rating or 4.0 }}
+            </div>
+
+            <div class="price">
+                <span class="new-price">
+                    ₹{{ (product.price * (1 - product.discount_percent/100)) | round(0) }}
+                </span>
+                {% if product.discount_percent %}
+                <span class="old-price">₹{{ product.price }}</span>
+                {% endif %}
+            </div>
+
+            <button class="add-to-cart" data-product-id="{{ product.id or product.product_id }}">
+                Add to Cart
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<div id="toast" class="toast hidden"></div>
 
 </body>
 </html>

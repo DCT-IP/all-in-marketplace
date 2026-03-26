@@ -7,11 +7,21 @@
 </head>
 <body>
 
-<h1>Your Cart</h1>
+<nav class="navbar">
+    <div class="logo">Cart</div>
+    <button onclick="window.location.href='/'">Home</button>
+</nav>
 
-<div id="cart"></div>
+<section class="cart-container">
+    <h2>Your Cart</h2>
 
-<button onclick="goHome()">Back to Products</button>
+    <div id="cartItems"></div>
+
+    <div class="cart-summary">
+        <h3>Total: ₹<span id="totalPrice">0</span></h3>
+        <button onclick="placeOrder()">Place Order</button>
+    </div>
+</section>
 
 </body>
 </html>
