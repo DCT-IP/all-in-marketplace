@@ -1,3 +1,32 @@
+:root {
+    --bg: #f1f3f6;
+    --card: #ffffff;
+    --text: #111827;
+    --muted: #6b7280;
+
+    --primary: #ff9900;
+    --primary-hover: #e68a00;
+
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+
+    --border: #e5e7eb;
+}
+
+body.dark {
+    --bg: #0f1111;
+    --card: #1a1a1a;
+    --text: #e6e6e6;
+    --muted: #9ca3af;
+
+    --primary: #febd69;          /* Amazon style */
+    --primary-hover: #f3a847;
+
+    --accent: #6366f1;
+    --accent-hover: #4f46e5;
+
+    --border: #2a2a2a;
+}
 /* RESET */
 * {
     margin: 0;
@@ -6,13 +35,15 @@
 }
 
 body {
+    background: var(--bg);
     font-family: 'Segoe UI', Arial, sans-serif;
-    background: #f1f3f6;
-    color: #333;
+    color: var(--text);
 }
 
 /* NAVBAR */
 .navbar {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -119,12 +150,13 @@ body {
 
 /* PRODUCT CARD */
 .product-card {
-    background: white;
-    border-radius: 10px;
-    padding: 15px;
-    position: relative;
-    transition: all 0.2s ease;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
     cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+        padding: 15px;
 }
 
 .product-card:hover {
@@ -261,22 +293,94 @@ body {
     }
 }
 
-/* DARK MODE */
+/* -------- DARK MODE FIXES -------- */
+
 body.dark {
     background: #121212;
-    color: #eee;
+    color: #e5e7eb;
 }
 
+/* NAVBAR */
 body.dark .navbar {
     background: #1e1e1e;
 }
 
+/* PRODUCT CARDS */
 body.dark .product-card {
-    background: #1e1e1e;
-    color: #fff;
+    background: #1f1f1f;
+    color: #f3f4f6;
 }
 
+/* CART */
+body.dark .cart-item {
+    background: #1f1f1f;
+    color: #f3f4f6;
+}
+
+/* DASHBOARD */
+body.dark .stat-card,
+body.dark .product-card {
+    background: #1f1f1f;
+}
+
+/* INPUTS */
+body.dark input,
+body.dark select {
+    background: #2a2a2a;
+    color: #fff;
+    border: 1px solid #444;
+}
+
+/* PLACEHOLDER */
+body.dark input::placeholder {
+    color: #aaa;
+}
+
+/* BUTTONS (IMPORTANT: DO NOT OVERRIDE ALL) */
 body.dark button {
+    background: inherit;
+    color: inherit;
+}
+
+/* PRIMARY BUTTONS */
+body.dark .add-to-cart,
+body.dark .checkout-btn,
+body.dark .dashboard-actions button {
+    background: #4f46e5;
+    color: white;
+}
+
+body.dark .add-to-cart:hover,
+body.dark .checkout-btn:hover {
+    background: #4338ca;
+}
+
+/* REMOVE BUTTON */
+body.dark .remove-btn {
+    background: #ef4444;
+}
+
+/* FILTER BUTTONS */
+body.dark .filter-btn {
+    background: #2a2a2a;
+    color: #ddd;
+}
+
+body.dark .filter-btn:hover {
+    background: #3a3a3a;
+}
+
+/* TEXT FIXES */
+body.dark .old-price {
+    color: #888;
+}
+
+body.dark .rating {
+    color: #fbbf24;
+}
+
+/* TOAST */
+body.dark .toast {
     background: #333;
     color: #fff;
 }
@@ -455,4 +559,180 @@ body.dark button {
 
 .dashboard-actions button:hover {
     background: #4338ca;
+}
+
+/* -------- CART PAGE -------- */
+
+.cart-container {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+.cart-container h2 {
+    margin-bottom: 20px;
+}
+
+/* ITEM */
+.cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* LEFT */
+.cart-left {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.cart-left img {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+}
+
+/* DETAILS */
+.cart-details h4 {
+    margin-bottom: 5px;
+}
+
+.cart-details p {
+    color: #666;
+}
+
+/* CONTROLS */
+.cart-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cart-controls button {
+    padding: 5px 10px;
+    border: none;
+    background: #ddd;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.cart-controls span {
+    min-width: 20px;
+    text-align: center;
+}
+
+/* REMOVE */
+.remove-btn {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* SUMMARY */
+.cart-summary {
+    margin-top: 20px;
+    text-align: right;
+}
+
+.checkout-btn {
+    margin-top: 10px;
+    padding: 12px 20px;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.checkout-btn:hover {
+    background: #4338ca;
+}
+
+/* ================= DARK MODE FINAL FIX ================= */
+
+/* Force all cards to respect theme */
+body.dark .product-card,
+body.dark .cart-item,
+body.dark .stat-card,
+body.dark .login-box,
+body.dark .card {
+    background: var(--card) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border);
+}
+
+/* Fix white backgrounds that were hardcoded */
+body.dark .dashboard-body,
+body.dark .cart-container {
+    background: var(--bg);
+}
+
+/* Fix text visibility */
+body.dark h1,
+body.dark h2,
+body.dark h3,
+body.dark h4,
+body.dark p,
+body.dark span {
+    color: var(--text);
+}
+
+/* Fix muted text */
+body.dark .cart-details p {
+    color: var(--muted);
+}
+
+/* Fix buttons inside cart controls */
+body.dark .cart-controls button {
+    background: #2f2f2f;
+    color: #fff;
+}
+
+/* Fix remove button visibility */
+body.dark .remove-btn {
+    background: #dc2626;
+    color: white;
+}
+
+/* Fix login page specifically */
+body.dark .login-body {
+    background: var(--bg);
+}
+
+body.dark .login-box {
+    background: var(--card);
+    color: var(--text);
+}
+
+/* Fix inputs everywhere */
+body.dark input,
+body.dark select {
+    background: #2a2a2a;
+    color: #fff;
+    border: 1px solid var(--border);
+}
+
+/* Fix placeholders */
+body.dark input::placeholder {
+    color: #888;
+}
+
+/* Fix TOTAL text in cart */
+body.dark #totalPrice {
+    color: #fff;
+    font-weight: bold;
+}
+
+.login-box .badge,
+.login-container .badge {
+    display: none;
 }

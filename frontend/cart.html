@@ -3,33 +3,30 @@
 <head>
     <title>Cart</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script defer src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
+
 <body>
 
-<nav class="navbar">
+<div class="navbar">
     <div class="logo">Cart</div>
-    <button onclick="window.location.href='/'">Home</button>
-</nav>
+    <div class="nav-actions">
+        <button onclick="window.location.href='/'">Home</button>
+    </div>
+</div>
 
-<section class="cart-container">
+<div class="cart-container">
+
     <h2>Your Cart</h2>
 
     <div id="cartItems"></div>
 
     <div class="cart-summary">
         <h3>Total: ₹<span id="totalPrice">0</span></h3>
-        <button onclick="placeOrder()">Place Order</button>
-        <button onclick="checkout()">Checkout</button>
+        <button class="checkout-btn" onclick="checkout()">Checkout</button>
     </div>
-</section>
-<script>
-    const user_id = localStorage.getItem("user_id");
 
-if (!user_id) {
-    window.location.href = "/login";
-}
-</script>
+</div>
 
+<script defer src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

@@ -206,20 +206,29 @@ async function loadCart() {
         total += subtotal;
 
         container.innerHTML += `
-        <div class="cart-item">
-            <img src="https://via.placeholder.com/80">
-            <div>
-                <h4>${item.name}</h4>
-                <p>₹${item.price_at_addition}</p>
+<div class="cart-item">
 
-                <button onclick="updateQty(${item.product_id}, -1)">-</button>
-                <span>${item.quantity}</span>
-                <button onclick="updateQty(${item.product_id}, 1)">+</button>
-            </div>
+    <div class="cart-left">
+        <img src="${item.image_url || 'https://via.placeholder.com/80'}">
 
-            <button onclick="removeItem(${item.product_id})">Remove</button>
+        <div class="cart-details">
+            <h4>${item.product_name}</h4>
+            <p>₹${item.price_at_addition}</p>
         </div>
-        `;
+    </div>
+
+    <div class="cart-controls">
+        <button onclick="updateQty(${item.product_id}, -1)">-</button>
+        <span>${item.quantity}</span>
+        <button onclick="updateQty(${item.product_id}, 1)">+</button>
+    </div>
+
+    <button class="remove-btn" onclick="removeItem(${item.product_id})">
+        Remove
+    </button>
+
+</div>
+`;
     });
 
     const totalEl = document.getElementById("totalPrice");
