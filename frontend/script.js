@@ -349,6 +349,11 @@ document.getElementById("login-btn")?.addEventListener("click", async () => {
 async function checkout() {
     const user_id = localStorage.getItem("user_id");
 
+    if (!user_id) {
+        alert("Login required");
+        return;
+    }
+
     const res = await fetch(`/checkout/${user_id}`, {
         method: "POST"
     });
@@ -356,9 +361,7 @@ async function checkout() {
     const data = await res.json();
 
     if (res.ok) {
-        alert("Order placed successfully");
-
-        // ✅ refresh cart
+        alert("Order placed successfully ✅");
         window.location.reload();
     } else {
         alert(data.error);

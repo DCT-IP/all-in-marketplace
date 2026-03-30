@@ -1,7 +1,7 @@
 # models/queries.py
 
 from db import get_connection
-
+from decimal import Decimal
 
 # ---------------- PRODUCTS ----------------
 def get_all_products():
@@ -244,11 +244,13 @@ def process_checkout(user_id):
     cursor = conn.cursor(dictionary=True)
 
     try:
+        # 🔒 Lock rows to prevent race conditions
         cursor.execute("""
             SELECT sc.product_id, sc.quantity, sc.price_at_addition, p.stock
             FROM shopping_cart sc
             JOIN products p ON sc.product_id = p.product_id
             WHERE sc.user_id = %s
+            FOR UPDATE
         """, (user_id,))
 
         items = cursor.fetchall()
@@ -256,7 +258,7 @@ def process_checkout(user_id):
         if not items:
             return {"status": "error", "message": "Cart is empty"}
 
-        # stock validation
+        # ✅ STOCK VALIDATION
         for item in items:
             if item["quantity"] > item["stock"]:
                 return {
@@ -264,27 +266,41 @@ def process_checkout(user_id):
                     "message": f"Insufficient stock for product {item['product_id']}"
                 }
 
-        # create orders + update stock
+        # ✅ CREATE ORDERS + UPDATE STOCK
         for item in items:
-            total = item["quantity"] * item["price_at_addition"]
+            price = item["price_at_addition"]
+
+            # FIX: Decimal safe multiplication
+            if not isinstance(price, Decimal):
+                price = Decimal(price)
+
+            total = price * item["quantity"]
 
             cursor.execute("""
                 INSERT INTO orders (user_id, product_id, quantity, total_price)
                 VALUES (%s, %s, %s, %s)
-            """, (user_id, item["product_id"], item["quantity"], total))
+            """, (
+                user_id,
+                item["product_id"],
+                item["quantity"],
+                float(total)   # MySQL safe
+            ))
 
             cursor.execute("""
                 UPDATE products
                 SET stock = stock - %s
                 WHERE product_id = %s
-            """, (item["quantity"], item["product_id"]))
-
-        # clear cart
+            """, (
+                item["quantity"],
+                item["product_id"]
+            ))
+            # ✅ CLEAR CART
         cursor.execute("""
             DELETE FROM shopping_cart WHERE user_id = %s
         """, (user_id,))
 
         conn.commit()
+
         return {"status": "success"}
 
     except Exception as e:

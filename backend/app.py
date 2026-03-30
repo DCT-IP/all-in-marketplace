@@ -103,7 +103,7 @@ def orders(user_id):
 @app.route("/checkout/<int:user_id>", methods=["POST"])
 def checkout(user_id):
     result = process_checkout(user_id)
-
+    
     if result["status"] == "error":
         return jsonify({"error": result["message"]}), 400
 
