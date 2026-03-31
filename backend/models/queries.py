@@ -8,7 +8,22 @@ def get_all_products():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM products")
+    cursor.execute("""
+        SELECT 
+            product_id,
+            product_name,
+            product_description,
+            price,
+            stock,
+            category,
+            product_condition,
+            IFNULL(image_url, '') AS image_url,
+            IFNULL(rating, 0) AS rating,
+            IFNULL(reviews, 0) AS reviews,
+            IFNULL(discount_percent, 0) AS discount_percent
+        FROM products
+    """)
+
     products = cursor.fetchall()
 
     cursor.close()
@@ -16,10 +31,15 @@ def get_all_products():
 
     cleaned = []
     for p in products:
-        p["price"] = float(p["price"]) if p["price"] else 0
-        p["rating"] = float(p["rating"]) if p["rating"] else 0
-        p["discount_percent"] = p["discount_percent"] or 0
-        p["stock"] = p["stock"] or 0
+        p["price"] = float(p["price"]) if p["price"] is not None else 0
+        p["rating"] = float(p["rating"]) if p["rating"] is not None else 0
+        p["discount_percent"] = int(p["discount_percent"]) if p["discount_percent"] is not None else 0
+        p["stock"] = int(p["stock"]) if p["stock"] is not None else 0
+
+        # ✅ FIX: image fallback (VERY IMPORTANT)
+        if not p["image_url"]:
+            p["image_url"] = "https://source.unsplash.com/200x150/?product"
+
         cleaned.append(p)
 
     return cleaned

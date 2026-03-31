@@ -124,13 +124,14 @@ function setupSearch() {
 function setupFilter() {
     document.querySelectorAll(".filter-btn").forEach(btn => {
         btn.addEventListener("click", () => {
-            const category = btn.dataset.category;
-
+            const category = btn.dataset.category.toLowerCase();
             document.querySelectorAll(".product-card").forEach(card => {
-                card.style.display =
-                    category === "all" || card.dataset.category === category
-                        ? "block"
-                        : "none";
+                const cardCategory = (card.dataset.category || "").toLowerCase();
+                if (category === "all" || cardCategory === category) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
             });
         });
     });
@@ -209,7 +210,8 @@ async function loadCart() {
 <div class="cart-item">
 
     <div class="cart-left">
-        <img src="${item.image_url || 'https://via.placeholder.com/80'}">
+        <img src="${item.image_url}" 
+     onerror="this.src='https://picsum.photos/200/150'">
 
         <div class="cart-details">
             <h4>${item.product_name}</h4>
