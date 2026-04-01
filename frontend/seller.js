@@ -41,3 +41,12 @@ data.products.forEach(p => {
 function toggleDarkMode() {
     document.body.classList.toggle("dark");
 }
+
+document.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll(".filter-btn")
+            .forEach(b => b.classList.remove("active"));
+
+        btn.classList.add("active");
+    });
+});
