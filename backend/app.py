@@ -81,19 +81,22 @@ def remove_cart_api():
     remove_from_cart(data["user_id"], data["product_id"])
     return jsonify({"message": "removed"})
 
+@app.route('/seller')
+def seller_page():
+    return render_template('seller.html')
 
-@app.route("/dashboard")
-def dashboard():
-    return render_template("dashboard.html")
+@app.route("/products")
+def products_api():
+    return jsonify(get_all_products())
 
-
-@app.route('/seller/<int:seller_id>')
-def seller(seller_id):
+@app.route("/seller/<int:seller_id>")
+def seller_dashboard(seller_id):
     return jsonify({
         "stats": get_seller_stats(seller_id),
-        "products": get_seller_products(seller_id)
+        "products": get_seller_products(seller_id),
+        "top_products": get_top_products(seller_id),
+        "daily_revenue": get_daily_revenue(seller_id)
     })
-
 
 @app.route("/orders/<int:user_id>")
 def get_orders(user_id):

@@ -1,25 +1,25 @@
-DROP PROCEDURE IF EXISTS place_order;
+DROP PROCEDURE IF EXISTS place_order_procedure;
+
+-- ================= STORED PROCEDURE FOR PLACING ORDER =================
 
 DELIMITER $$
 
-CREATE PROCEDURE place_order(
-    IN p_user INT,
-    IN p_product INT,
-    IN p_quantity INT
+CREATE PROCEDURE place_order_procedure(
+    IN uid INT,
+    IN pid INT,
+    IN qty INT,
+    IN phone_val VARCHAR(20),
+    IN address_val TEXT
 )
 BEGIN
-    DECLARE price_val DECIMAL(10,2);
+    DECLARE total DECIMAL(10,2);
 
-    -- get product price
-    SELECT price INTO price_val
+    SELECT price * qty INTO total
     FROM products
-    WHERE product_id = p_product;
+    WHERE product_id = pid;
 
-    -- insert order (trigger will handle last_item_purchased)
-    INSERT INTO orders(user_id, product_id, quantity, total_price)
-    VALUES (p_user, p_product, p_quantity, price_val * p_quantity);
-
+    INSERT INTO orders(user_id, product_id, quantity, total_price, phone, address, order_status)
+    VALUES(uid, pid, qty, total, phone_val, address_val, 'Placed');
 END$$
 
 DELIMITER ;
-

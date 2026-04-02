@@ -3,21 +3,32 @@
 <head>
     <title>Seller Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <script defer src="{{ url_for('static', filename='seller.js') }}"></script>
 </head>
 
 <body>
 
+<!-- NAVBAR -->
 <div class="navbar">
     <div class="logo">Seller Dashboard</div>
 
     <div class="nav-actions">
-        <button onclick="goHome()">Home</button>
-        <button onclick="toggleDarkMode()">🌙</button>
+        <button onclick="window.location.href='/'">Home</button>
+        <button onclick="toggleTheme()">🌙</button>
     </div>
 </div>
 
 <div class="dashboard-container">
+
+    <!-- HEADER -->
+    <div class="dashboard-header">
+        <h1>Analytics Overview</h1>
+        <p>Track your sales & performance</p>
+    </div>
 
     <!-- STATS -->
     <div class="stats-grid">
@@ -35,6 +46,16 @@
             <h4>Total Revenue</h4>
             <p id="total_revenue">₹0</p>
         </div>
+    </div>
+
+    <!-- CHART -->
+    <div class="chart-container">
+        <h2>Sales Overview</h2>
+        <canvas id="revenueChart"></canvas>
+    </div>
+    <div class="chart-container">
+    <h2>Top Products</h2>
+    <canvas id="topProductsChart"></canvas>
     </div>
 
     <!-- PRODUCTS -->

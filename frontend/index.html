@@ -18,6 +18,13 @@
         <button onclick="window.location.href='/orders-page'">My Orders</button>
     </div>
 </nav>
+<!-- SLIDER -->
+<div class="slider">
+    <div class="slides" id="slides"></div>
+
+    <button class="slider-btn left" onclick="prevSlide()">‹</button>
+    <button class="slider-btn right" onclick="nextSlide()">›</button>
+</div>
 
 <div class="top-controls">
     <div class="search-sort">
@@ -37,6 +44,10 @@
     <button class="filter-btn" data-category="mobiles">Mobiles</button>
     <button class="filter-btn" data-category="computers">Computers</button>
     <button class="filter-btn" data-category="accessories">Accessories</button>
+    <button class="filter-btn" data-category="electronics">Electronics</button>
+    <button class="filter-btn" data-category="audio">Audio</button>
+    <button class="filter-btn" data-category="tv">TVs</button>
+    <button class="filter-btn" data-category="cameras">Cameras</button>
 </section>
 
 <section>
@@ -52,7 +63,9 @@
             {% if product.discount_percent %}
             <span class="badge">-{{ product.discount_percent }}%</span>
             {% endif %}
-
+<p class="product-desc">
+    {{ product.description or "High quality product" }}
+</p>
 <img src="{{ product.image_url }}" 
      onerror="this.src='https://picsum.photos/200/150'">
             <h3>{{ product.name or product.product_name }}</h3>
@@ -70,9 +83,11 @@
                 {% endif %}
             </div>
 
-            <button class="add-to-cart" data-product-id="{{ product.id or product.product_id }}">
-                Add to Cart
-            </button>
+            <button 
+    class="add-to-cart" 
+    data-product-id="{{ product.id or product.product_id }}">
+    Add to Cart
+</button>
         </div>
         {% endfor %}
     </div>

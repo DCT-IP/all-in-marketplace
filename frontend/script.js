@@ -1,11 +1,11 @@
 const BASE_URL = "http://127.0.0.1:5000";
 
-const protectedRoutes = ["/cart", "/dashboard"];
+const protectedRoutes = ["/cart", "/seller"];
 const path = window.location.pathname;
 const role = localStorage.getItem("role");
 const userId = localStorage.getItem("user_id");
 
-if (path.startsWith("/dashboard") && role !== "seller") {
+if (path.startsWith("/seller") && role !== "seller") {
     window.location.href = "/";
 }
 
@@ -33,7 +33,7 @@ function renderAuthUI() {
         if (role === "seller" && dashboardBtn) {
             dashboardBtn.style.display = "inline-block";
             dashboardBtn.onclick = () => {
-                window.location.href = "/dashboard";
+                window.location.href = "/seller";
             };
         }
     } else {
@@ -91,6 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCart();
     loadUserDetails();
     loadOrders();
+    loadSlider();
 
     const loginForm = document.getElementById("login-form");
     if (loginForm) {
@@ -126,15 +127,23 @@ function setupSearch() {
 function setupFilter() {
     document.querySelectorAll(".filter-btn").forEach(btn => {
         btn.addEventListener("click", () => {
-            const category = btn.dataset.category.toLowerCase();
+
+            const category = (btn.dataset.category || "").toLowerCase();
+
             document.querySelectorAll(".product-card").forEach(card => {
                 const cardCategory = (card.dataset.category || "").toLowerCase();
-                if (category === "all" || cardCategory === category) {
-                    card.style.display = "block";
-                } else {
-                    card.style.display = "none";
-                }
+
+                const match =
+                    category === "all" ||
+                    cardCategory === category ||
+                    cardCategory.includes(category) ||
+                    category.includes(cardCategory);
+
+                card.style.display = match ? "block" : "none";
             });
+
+            document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
         });
     });
 }
@@ -170,28 +179,34 @@ function setupSort() {
 }
 
 document.addEventListener("click", async (e) => {
-    if (e.target.classList.contains("add-to-cart")) {
+    const btn = e.target.closest(".add-to-cart");  // ✅ FIX
 
-        if (!localStorage.getItem("user_id")) {
-            showToast("Login required ⚠️");
-            window.location.href = "/login";
-            return;
-        }
+    if (!btn) return;
 
-        const productId = e.target.dataset.productId;
-
-        await fetch(`${BASE_URL}/add_to_cart`, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                user_id: localStorage.getItem("user_id"),
-                product_id: productId,
-                quantity: 1
-            })
-        });
-
-        showToast("Added to cart ✅");
+    if (!localStorage.getItem("user_id")) {
+        showToast("Login required ⚠️");
+        window.location.href = "/login";
+        return;
     }
+
+    const productId = btn.dataset.productId;
+
+    if (!productId) {
+        console.error("Product ID missing");
+        return;
+    }
+
+    await fetch(`${BASE_URL}/add_to_cart`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            user_id: localStorage.getItem("user_id"),
+            product_id: productId,
+            quantity: 1
+        })
+    });
+
+    showToast("Added to cart ✅");
 });
 
 async function loadCart() {
@@ -260,7 +275,7 @@ async function signup() {
         localStorage.setItem("user_id", data.user_id);
         localStorage.setItem("role", data.role);
 
-        window.location.href = data.role === "seller" ? "/dashboard" : "/";
+        window.location.href = data.role === "seller" ? "/seller" : "/";
     } else {
         alert(data.error || "Signup failed");
     }
@@ -287,7 +302,7 @@ async function login() {
         localStorage.setItem("user_id", data.user_id);
         localStorage.setItem("role", data.role);
 
-        window.location.href = data.role === "seller" ? "/dashboard" : "/";
+        window.location.href = data.role === "seller" ? "/seller" : "/";
     } else {
         alert(data.error || "Login failed");
     }
@@ -346,7 +361,7 @@ document.getElementById("signup-btn")?.addEventListener("click", async () => {
     localStorage.setItem("role", data.role);
 
     if (data.role === "seller") {
-        window.location.href = "/dashboard";
+        window.location.href = "/seller";
     } else {
         window.location.href = "/";
     }
@@ -371,7 +386,7 @@ document.getElementById("login-btn")?.addEventListener("click", async () => {
         localStorage.setItem("role", data.role);
 
         if (data.role === "seller") {
-            window.location.href = "/dashboard";
+            window.location.href = "/seller";
         } else {
             window.location.href = "/";
         }
@@ -525,4 +540,124 @@ function simulatePayment(method) {
 
         }, 1000);
     });
+}
+
+function loadSlider() {
+    const container = document.getElementById("slides");
+    if (!container) return;
+
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    fetch("/products")
+    .then(res => res.json())
+    .then(products => {
+
+        let slides = [];
+
+        // 🔹 LAST PURCHASE
+        if (user && user.last_item_purchased) {
+            const last = products.find(p => p.product_id == user.last_item_purchased);
+
+            if (last) {
+                slides.push(`
+                <div class="slide">
+                    <img src="${last.image_url || getCategoryImage(last.category)}">
+                    <div class="slide-content">
+                        <h2>${last.product_name}</h2>
+                        <p>Your Last Purchase</p>
+                    </div>
+                </div>`);
+            }
+        }
+
+        // 🔹 TOP PRODUCTS
+        const top = [...products].sort((a,b) => (b.rating||0) - (a.rating||0)).slice(0, 3);
+
+        top.forEach(p => {
+            slides.push(`
+            <div class="slide">
+                <img src="${p.image_url || getCategoryImage(p.category)}">
+                <div class="slide-content">
+                    <h2>${p.product_name}</h2>
+                    <p>Top Rated ⭐ ${p.rating || 4}</p>
+                </div>
+            </div>`);
+        });
+        // 🔹 3. Seller-specific slides (ADD THIS HERE)
+if (user && user.role === "seller") {
+    const sellerProducts = products.filter(p => p.seller_id == user.user_id);
+
+    sellerProducts.slice(0, 2).forEach(p => {
+        slides.push(`
+        <div class="slide">
+            <img src="${p.image_url || 'https://picsum.photos/900/300'}">
+            <div class="slide-content">
+                <h2>${p.product_name}</h2>
+                <p>Your Product</p>
+            </div>
+        </div>`);
+    });
+}
+
+        // 🔹 FALLBACK (VERY IMPORTANT)
+        if (slides.length === 0) {
+            slides.push(`
+            <div class="slide">
+                <img src="https://picsum.photos/900/300">
+                <div class="slide-content">
+                    <h2>Welcome to OneStop</h2>
+                </div>
+            </div>`);
+        }
+
+        container.innerHTML = slides.join("");
+
+        startSlider(); // run AFTER DOM update
+    })
+    .catch(err => {
+        console.error("Slider error:", err);
+    });
+}
+
+function startSlider() {
+let currentIndex = 0;
+
+function startSlider() {
+    const container = document.getElementById("slides");
+    const slides = document.querySelectorAll(".slide");
+
+    if (!slides.length) return;
+
+    setInterval(() => {
+        currentIndex = (currentIndex + 1) % slides.length;
+        container.style.transform = `translateX(-${currentIndex * 100}%)`;
+    }, 4000);
+}
+}
+function nextSlide() {
+    const slides = document.querySelectorAll(".slide");
+    const container = document.getElementById("slides");
+
+    currentIndex = (currentIndex + 1) % slides.length;
+    container.style.transform = `translateX(-${currentIndex * 100}%)`;
+}
+
+function prevSlide() {
+    const slides = document.querySelectorAll(".slide");
+    const container = document.getElementById("slides");
+
+    currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+    container.style.transform = `translateX(-${currentIndex * 100}%)`;
+}
+
+
+function getCategoryImage(category) {
+    const map = {
+        mobiles: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9",
+        computers: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8",
+        audio: "https://images.unsplash.com/photo-1518441902117-8f4b8b8b0d64",
+        tvs: "https://images.unsplash.com/photo-1593784991095-a205069470b6",
+        cameras: "https://images.unsplash.com/photo-1519183071298-a2962be96a4c"
+    };
+    return map[category?.toLowerCase()] || "https://picsum.photos/900/300";
 }

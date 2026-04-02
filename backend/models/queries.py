@@ -226,6 +226,67 @@ WHERE p.seller_id = %s;
     return stats
 
 
+def get_top_products(seller_id, limit=5):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT p.product_name, SUM(o.quantity) AS sold
+        FROM orders o
+        JOIN products p ON o.product_id = p.product_id
+        WHERE p.seller_id = %s
+        GROUP BY p.product_id
+        ORDER BY sold DESC
+        LIMIT %s;
+    """, (seller_id, limit))  
+
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return data
+
+
+def place_order_sp(user_id, product_id, qty, phone, address):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.callproc("place_order_procedure", (
+            user_id, product_id, qty, phone, address
+        ))
+        conn.commit()
+        return {"status": "success"}
+
+    except Exception as e:
+        conn.rollback()
+        return {"status": "error", "message": str(e)}
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def get_daily_revenue(seller_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT 
+            DATE(o.order_date) AS day,
+            SUM(o.total_price) AS revenue
+        FROM orders o
+        JOIN products p ON o.product_id = p.product_id
+        WHERE p.seller_id = %s
+        GROUP BY day
+        ORDER BY day
+    """, (seller_id,))
+
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return data
+
+
 def get_seller_products(seller_id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
