@@ -629,14 +629,23 @@ function loadSlider() {
 function buildSlide(card, label) {
     const name = card.querySelector("h3")?.innerText;
     const img = card.querySelector("img")?.src;
-    const id = card.querySelector(".add-to-cart")?.dataset.productId;
+    const btn = card.querySelector(".add-to-cart");
+    const id = btn ? btn.getAttribute("data-product-id") : null;
+
+    if (!id) {
+        console.error("Missing product ID in slide");
+        return "";
+    }
 
     return `
-    <div class="slide" onclick="viewProductFromSlide(${id})">
+    <div class="slide">
         <img src="${img}">
         <div class="slide-content">
             <h2>${name}</h2>
             <p>${label}</p>
+            <button class="add-to-cart" data-product-id="${id}">
+                Add to Cart
+            </button>
         </div>
     </div>`;
 }
@@ -668,11 +677,6 @@ function startSlider() {
     sliderInterval = setInterval(nextSlide, 4000);
 }
 
-function viewProductFromSlide(productId) {
-    if (!productId) return;
-
-    window.location.href = `/product/${productId}`;
-}
 function setupDots(count) {
     const dotsContainer = document.getElementById("sliderDots");
     if (!dotsContainer) return;
@@ -724,4 +728,33 @@ function getCategoryImage(category) {
         cameras: "https://images.unsplash.com/photo-1519183071298-a2962be96a4c"
     };
     return map[category?.toLowerCase()] || "https://picsum.photos/900/300";
+}
+function addToCart(productId) {
+    const user_id = localStorage.getItem("user_id");
+
+    if (!user_id) {
+        showToast("Login required");
+        return;
+    }
+
+    fetch(`${BASE_URL}/add_to_cart`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            user_id: user_id,
+            product_id: productId,
+            quantity: 1
+        })
+    })
+    .then(res => res.json())
+    .then(() => {
+        showToast("Added to cart ✅");
+        loadCart();
+    })
+    .catch(err => {
+        console.error(err);
+        showToast("Failed to add ❌");
+    });
 }
