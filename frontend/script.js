@@ -1,5 +1,6 @@
 const BASE_URL = "http://127.0.0.1:5000";
-
+let currentIndex = 0;
+let sliderInterval;
 const protectedRoutes = ["/cart", "/seller"];
 const path = window.location.pathname;
 const role = localStorage.getItem("role");
@@ -82,7 +83,10 @@ function showToast(msg) {
     setTimeout(() => toast.classList.add("hidden"), 2000);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("load", () => {
+    console.log("🔥 App Init Start");
+
+    // ===== CORE APP =====
     renderAuthUI();
     loadTheme();
     setupSearch();
@@ -91,8 +95,8 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCart();
     loadUserDetails();
     loadOrders();
-    loadSlider();
 
+    // ===== AUTH FORMS =====
     const loginForm = document.getElementById("login-form");
     if (loginForm) {
         loginForm.addEventListener("submit", async (e) => {
@@ -108,18 +112,55 @@ document.addEventListener("DOMContentLoaded", () => {
             await signup();
         });
     }
+
+    // ===== SLIDER INIT =====
+    const user = JSON.parse(localStorage.getItem("user_id"));
+    const slider = document.getElementById("slider");
+
+    if (!slider) {
+        console.log("❌ Slider not found");
+        return;
+    }
+
+    if (!user) {
+        slider.style.display = "none";
+        console.log("❌ No user → slider hidden");
+        return;
+    }
+
+    slider.style.display = "block";
+
+    console.log("⏳ Waiting for products...");
+
+    const waitForProducts = setInterval(() => {
+        const cards = document.querySelectorAll(".product-card");
+
+        console.log("Checking products:", cards.length);
+
+        if (cards.length > 0) {
+            clearInterval(waitForProducts);
+
+            console.log("✅ Products ready → loading slider");
+
+            loadSlider();
+        }
+    }, 100);
 });
 
 function setupSearch() {
-    const searchBar = document.getElementById("searchBar");
-    if (!searchBar) return;
+    const input = document.querySelector("input");
 
-    searchBar.addEventListener("input", (e) => {
-        const val = e.target.value.toLowerCase();
+    input.addEventListener("input", () => {
+        const value = input.value.toLowerCase();
 
         document.querySelectorAll(".product-card").forEach(card => {
-            card.style.display =
-                card.dataset.name.includes(val) ? "block" : "none";
+            const name = card.dataset.name || "";
+
+            if (name.includes(value)) {
+                card.style.display = "block";
+            } else {
+                card.style.display = "none";
+            }
         });
     });
 }
@@ -544,113 +585,136 @@ function simulatePayment(method) {
 
 function loadSlider() {
     const container = document.getElementById("slides");
-    if (!container) return;
-
     const user = JSON.parse(localStorage.getItem("user"));
 
-    fetch("/products")
-    .then(res => res.json())
-    .then(products => {
+    if (!container) return;
 
-        let slides = [];
+    const cards = document.querySelectorAll(".product-card");
+    if (!cards.length) return;
 
-        // 🔹 LAST PURCHASE
-        if (user && user.last_item_purchased) {
-            const last = products.find(p => p.product_id == user.last_item_purchased);
+    let slides = [];
 
-            if (last) {
-                slides.push(`
-                <div class="slide">
-                    <img src="${last.image_url || getCategoryImage(last.category)}">
-                    <div class="slide-content">
-                        <h2>${last.product_name}</h2>
-                        <p>Your Last Purchase</p>
-                    </div>
-                </div>`);
-            }
-        }
-
-        // 🔹 TOP PRODUCTS
-        const top = [...products].sort((a,b) => (b.rating||0) - (a.rating||0)).slice(0, 3);
-
-        top.forEach(p => {
-            slides.push(`
-            <div class="slide">
-                <img src="${p.image_url || getCategoryImage(p.category)}">
-                <div class="slide-content">
-                    <h2>${p.product_name}</h2>
-                    <p>Top Rated ⭐ ${p.rating || 4}</p>
-                </div>
-            </div>`);
+    // ===== 1. LAST PURCHASE (if exists)
+    if (user && user.last_item_purchased) {
+        const match = [...cards].find(card => {
+            return card.querySelector(".add-to-cart")?.dataset.productId == user.last_item_purchased;
         });
-        // 🔹 3. Seller-specific slides (ADD THIS HERE)
-if (user && user.role === "seller") {
-    const sellerProducts = products.filter(p => p.seller_id == user.user_id);
 
-    sellerProducts.slice(0, 2).forEach(p => {
-        slides.push(`
-        <div class="slide">
-            <img src="${p.image_url || 'https://picsum.photos/900/300'}">
-            <div class="slide-content">
-                <h2>${p.product_name}</h2>
-                <p>Your Product</p>
-            </div>
-        </div>`);
-    });
-}
-
-        // 🔹 FALLBACK (VERY IMPORTANT)
-        if (slides.length === 0) {
-            slides.push(`
-            <div class="slide">
-                <img src="https://picsum.photos/900/300">
-                <div class="slide-content">
-                    <h2>Welcome to OneStop</h2>
-                </div>
-            </div>`);
+        if (match) {
+            slides.push(buildSlide(match, "Your Last Purchase"));
         }
+    }
 
-        container.innerHTML = slides.join("");
+    // ===== 2. TOP RATED PRODUCT
+    const topRated = [...cards].sort((a, b) => {
+        return (b.dataset.rating || 0) - (a.dataset.rating || 0);
+    })[0];
 
-        startSlider(); // run AFTER DOM update
-    })
-    .catch(err => {
-        console.error("Slider error:", err);
-    });
+    if (topRated) {
+        slides.push(buildSlide(topRated, "Top Rated"));
+    }
+
+    // ===== 3. RANDOM PRODUCTS (fill remaining)
+    for (let i = 0; i < cards.length && slides.length < 4; i++) {
+        slides.push(buildSlide(cards[i], "Recommended"));
+    }
+
+    container.innerHTML = slides.join("");
+
+    setupDots(slides.length);
+    startSlider();
+    addSwipe();
 }
 
-function startSlider() {
-let currentIndex = 0;
+function buildSlide(card, label) {
+    const name = card.querySelector("h3")?.innerText;
+    const img = card.querySelector("img")?.src;
+    const id = card.querySelector(".add-to-cart")?.dataset.productId;
 
-function startSlider() {
-    const container = document.getElementById("slides");
-    const slides = document.querySelectorAll(".slide");
-
-    if (!slides.length) return;
-
-    setInterval(() => {
-        currentIndex = (currentIndex + 1) % slides.length;
-        container.style.transform = `translateX(-${currentIndex * 100}%)`;
-    }, 4000);
+    return `
+    <div class="slide" onclick="viewProductFromSlide(${id})">
+        <img src="${img}">
+        <div class="slide-content">
+            <h2>${name}</h2>
+            <p>${label}</p>
+        </div>
+    </div>`;
 }
-}
+
 function nextSlide() {
     const slides = document.querySelectorAll(".slide");
     const container = document.getElementById("slides");
 
+    if (!slides.length) return;
+
     currentIndex = (currentIndex + 1) % slides.length;
     container.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+    updateDots();
 }
 
 function prevSlide() {
     const slides = document.querySelectorAll(".slide");
     const container = document.getElementById("slides");
 
+    if (!slides.length) return;
+
     currentIndex = (currentIndex - 1 + slides.length) % slides.length;
     container.style.transform = `translateX(-${currentIndex * 100}%)`;
 }
 
+function startSlider() {
+    clearInterval(sliderInterval);
+    sliderInterval = setInterval(nextSlide, 4000);
+}
 
+function viewProductFromSlide(productId) {
+    if (!productId) return;
+
+    window.location.href = `/product/${productId}`;
+}
+function setupDots(count) {
+    const dotsContainer = document.getElementById("sliderDots");
+    if (!dotsContainer) return;
+
+    let html = "";
+
+    for (let i = 0; i < count; i++) {
+        html += `<span class="dot" onclick="goToSlide(${i})"></span>`;
+    }
+
+    dotsContainer.innerHTML = html;
+    updateDots();
+}
+function goToSlide(index) {
+    const container = document.getElementById("slides");
+
+    currentIndex = index;
+    container.style.transform = `translateX(-${index * 100}%)`;
+
+    updateDots();
+}
+function updateDots() {
+    document.querySelectorAll(".dot").forEach((d, i) => {
+        d.classList.toggle("active", i === currentIndex);
+    });
+}
+function addSwipe() {
+    let startX = 0;
+
+    const slider = document.getElementById("slider");
+
+    slider.addEventListener("touchstart", (e) => {
+        startX = e.touches[0].clientX;
+    });
+
+    slider.addEventListener("touchend", (e) => {
+        let endX = e.changedTouches[0].clientX;
+
+        if (startX - endX > 50) nextSlide();
+        if (endX - startX > 50) prevSlide();
+    });
+}
 function getCategoryImage(category) {
     const map = {
         mobiles: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9",

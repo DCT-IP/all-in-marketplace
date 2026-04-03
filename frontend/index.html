@@ -19,18 +19,28 @@
     </div>
 </nav>
 <!-- SLIDER -->
-<div class="slider">
+<div class="slider" id="slider">
+
     <div class="slides" id="slides"></div>
 
-    <button class="slider-btn left" onclick="prevSlide()">‹</button>
-    <button class="slider-btn right" onclick="nextSlide()">›</button>
+    <!-- controls wrapper (prevents layout issues) -->
+    <div class="slider-controls">
+        <button class="slider-btn left" onclick="prevSlide()">‹</button>
+        <button class="slider-btn right" onclick="nextSlide()">›</button>
+    </div>
+
 </div>
+<div class="dots" id="sliderDots"></div>
 
 <div class="top-controls">
     <div class="search-sort">
-        <input placeholder="Search products...">
-        <select>
-            <option>Sort</option>
+        <input id="searchInput" placeholder="Search products...">
+        
+        <select id="sortSelect">
+            <option value="">Sort</option>
+            <option value="price_low">Price: Low → High</option>
+            <option value="price_high">Price: High → Low</option>
+            <option value="rating">Rating</option>
         </select>
     </div>
 </div>
@@ -63,12 +73,14 @@
             {% if product.discount_percent %}
             <span class="badge">-{{ product.discount_percent }}%</span>
             {% endif %}
+<img src="{{ product.image_url }}" 
+     onerror="this.src='https://picsum.photos/200/150'">
+
+<h3>{{ product.name or product.product_name }}</h3>
+
 <p class="product-desc">
     {{ product.description or "High quality product" }}
 </p>
-<img src="{{ product.image_url }}" 
-     onerror="this.src='https://picsum.photos/200/150'">
-            <h3>{{ product.name or product.product_name }}</h3>
 
             <div class="rating">
                 ⭐ {{ product.rating or 4.0 }}
