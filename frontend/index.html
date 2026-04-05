@@ -27,9 +27,8 @@
         <button class="slider-btn left" onclick="prevSlide()">‹</button>
         <button class="slider-btn right" onclick="nextSlide()">›</button>
     </div>
-
+    <div id="sliderDots" class="slider-dots"></div>
 </div>
-<div class="dots" id="sliderDots"></div>
 
 <div class="top-controls">
     <div class="search-sort">
@@ -47,17 +46,28 @@
 <header class="hero">
     <h1>Welcome to OneStop</h1>
 </header>
+<div class="filter-wrapper">
 
-<section class="category-bar">
-    <button class="filter-btn" data-category="all">All</button>
-    <button class="filter-btn" data-category="mobiles">Mobiles</button>
-    <button class="filter-btn" data-category="computers">Computers</button>
-    <button class="filter-btn" data-category="accessories">Accessories</button>
-    <button class="filter-btn" data-category="electronics">Electronics</button>
-    <button class="filter-btn" data-category="audio">Audio</button>
-    <button class="filter-btn" data-category="tv">TVs</button>
-    <button class="filter-btn" data-category="cameras">Cameras</button>
-</section>
+    <div class="filter-header">
+        <button id="filterToggle" class="filter-toggle-btn">
+            Filters 
+        </button>
+    </div>
+
+    <div id="filterBar" class="filter-panel">
+        <section class="category-bar">
+            <button class="filter-btn" data-category="all">All</button>
+            <button class="filter-btn" data-category="mobiles">Mobiles</button>
+            <button class="filter-btn" data-category="computers">Computers</button>
+            <button class="filter-btn" data-category="accessories">Accessories</button>
+            <button class="filter-btn" data-category="electronics">Electronics</button>
+            <button class="filter-btn" data-category="audio">Audio</button>
+            <button class="filter-btn" data-category="tv">TVs</button>
+            <button class="filter-btn" data-category="cameras">Cameras</button>
+        </section>
+    </div>
+
+</div>
 
 <section>
     <div id="products" class="products-grid">

@@ -235,6 +235,36 @@ const checkProducts = setInterval(() => {
     }
 
     }, 100);
+
+
+// ===== FILTER COLLAPSE FINAL FIX =====
+const filterToggle = document.getElementById("filterToggle");
+const filterBar = document.getElementById("filterBar");
+
+if (filterToggle && filterBar) {
+
+    let collapsed = false;
+
+    // 🔥 FIX: wait for layout to settle
+    setTimeout(() => {
+        filterBar.style.maxHeight = filterBar.scrollHeight + "px";
+    }, 50);
+
+    filterToggle.addEventListener("click", () => {
+
+        collapsed = !collapsed;
+
+        if (collapsed) {
+            filterBar.style.maxHeight = "0px";
+            filterBar.style.opacity = "0";
+            filterToggle.innerText = "Filters ⬇";
+        } else {
+            filterBar.style.maxHeight = filterBar.scrollHeight + "px";
+            filterBar.style.opacity = "1";
+            filterToggle.innerText = "Filters ⬆";
+        }
+    });
+}
 });
 
 // ===== SEARCH =====
@@ -394,11 +424,23 @@ async function loadOrders() {
 
     orders.forEach(o => {
         html += `
-        <div class="order-card">
-            <h4>${o.product_name}</h4>
-            <p>${o.quantity}</p>
-            <p>₹${o.total_price}</p>
-        </div>`;
+<div class="order-card">
+    <img src="${o.image_url}" onerror="this.src='https://via.placeholder.com/100'">
+
+    <div class="order-info">
+        <h4>${o.product_name}</h4>
+        <div class="order-meta">
+            Qty: ${o.quantity} • ₹${o.total_price}
+        </div>
+        <div class="order-meta">
+            ${new Date(o.order_date).toLocaleDateString()}
+        </div>
+    </div>
+
+    <div class="order-status">
+        ${o.order_status}
+    </div>
+</div>`;
     });
 
     container.innerHTML = html || "<p>No orders yet</p>";
@@ -427,18 +469,20 @@ function loadSlider() {
     const cards = document.querySelectorAll(".product-card");
     if (!cards.length) return;
 
-    let slides = [];
+    let slidesArr = [];
 
     const topRated = [...cards].sort((a, b) => b.dataset.rating - a.dataset.rating)[0];
-    if (topRated) slides.push(buildSlide(topRated, "Top Rated"));
+    if (topRated) slidesArr.push(buildSlide(topRated, "Top Rated"));
 
-    for (let i = 0; i < cards.length && slides.length < 4; i++) {
-        slides.push(buildSlide(cards[i], "Recommended"));
+    for (let i = 0; i < cards.length && slidesArr.length < 4; i++) {
+        slidesArr.push(buildSlide(cards[i], "Recommended"));
     }
 
-    container.innerHTML = slides.join("");
-    setupDots(slides.length);
+    container.innerHTML = slidesArr.join("");
+    setupDots(slidesArr.length);
+    console.log("✅ Slider loaded with", slidesArr.length, "slides");
     startSlider();
+    updateDots();
 }
 
 // ===== SAFE SLIDE BUILDER =====
@@ -477,6 +521,8 @@ function nextSlide() {
 
     currentIndex = (currentIndex + 1) % slides.length;
     container.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+    updateDots();
 }
 
 function prevSlide() {
@@ -487,16 +533,48 @@ function prevSlide() {
 
     currentIndex = (currentIndex - 1 + slides.length) % slides.length;
     container.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+    updateDots();
 }
 
 function startSlider() {
     clearInterval(sliderInterval);
+    updateDots();
     sliderInterval = setInterval(nextSlide, 4000);
 }
 
+window.addEventListener("load", () => {
+    const sliderEl = document.getElementById("slider");
+
+    if (!sliderEl) return;
+
+    sliderEl.addEventListener("mouseenter", () => {
+        clearInterval(sliderInterval);
+    });
+
+    sliderEl.addEventListener("mouseleave", () => {
+        startSlider();
+    });
+
+    let startX = 0;
+
+    sliderEl.addEventListener("touchstart", e => {
+        startX = e.touches[0].clientX;
+    });
+
+    sliderEl.addEventListener("touchend", e => {
+        const endX = e.changedTouches[0].clientX;
+
+        if (startX - endX > 50) nextSlide();
+        if (endX - startX > 50) prevSlide();
+    });
+});;
 function setupDots(count) {
     const dotsContainer = document.getElementById("sliderDots");
-    if (!dotsContainer) return;
+    if (!dotsContainer){
+        console.error("❌ Dots container not found");
+        return;
+    }
 
     let html = "";
 
@@ -505,6 +583,7 @@ function setupDots(count) {
     }
 
     dotsContainer.innerHTML = html;
+    currentIndex = 0;
     updateDots();
 }
 
@@ -517,6 +596,8 @@ function updateDots() {
 function goToSlide(i) {
     currentIndex = i;
     document.getElementById("slides").style.transform = `translateX(-${i * 100}%)`;
+
+    updateDots();
 }
 
 // ===== CURSOR GLOW =====
@@ -536,6 +617,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
 
 // ---------- SIGNUP ----------
 const signupBtn = document.getElementById("signup-btn");

@@ -140,9 +140,6 @@ def order_success():
 def orders_page():
     return render_template("orders-page.html")
 
-@app.route("/success")
-def success():
-    return render_template("success.html")
 
 if __name__ == '__main__':
     app.run(debug=True)
